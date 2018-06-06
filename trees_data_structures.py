@@ -63,6 +63,8 @@ class RegressionTreeEnsemble:
         self.c = c
 
     def evaluate(self, x, m):
+        m = min(m, self.M)
+
         evals = [tree.evaluate(x)*weight for tree, weight in zip(self.trees[:m], self.weights[:m])]
         
         return self.c + sum(evals)

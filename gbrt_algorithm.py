@@ -1,5 +1,6 @@
 from trees_data_structures import *
 import numpy as np
+import pandas as pd
 
 
 def get_optimal_partiotion(data, label_name):
@@ -28,18 +29,18 @@ def get_optimal_partiotion(data, label_name):
     return best_col_name, best_split_value
 
 
-def cart(dataset, max_depth, min_node_size):
+def cart(data, max_depth, min_node_size, label_name):
     tree = RegressionTree()
 
     # the i_th list in d consists of tuples of node references and their relevant datasets
     tree_levels_list = [[] for _ in range(max_depth + 1)]
-    tree_levels_list[0] = [(dataset.data, tree.get_root())]
+    tree_levels_list[0] = [(data, tree.get_root())]
     # store all leaves tuples (dataset and reference to node)
     leaves = []
 
     for depth in range(max_depth):
         for node_data, node_reference in tree_levels_list[depth]:  # for each depth, iterate over all nodes and split as necessary
-            col_name, split_value = get_optimal_partiotion(node_data, dataset.label_name)
+            col_name, split_value = get_optimal_partiotion(node_data, label_name)
             left_node_data = node_data[node_data[col_name] <= split_value]
             right_node_data = node_data[node_data[col_name] > split_value]
 
@@ -61,6 +62,29 @@ def cart(dataset, max_depth, min_node_size):
     # add all nodes in maximum depth to the leaves and calculates each leave value
     leaves += tree_levels_list[max_depth]
     for node_data, node_reference in leaves:
-        node_reference.const = node_data[dataset.label_name].mean()
+        node_reference.const = node_data[label_name].mean()
 
     return tree
+
+
+def gbrt(data, num_trees, max_depth, min_node_size, label_name):
+    tree_ensemble = RegressionTreeEnsemble()
+
+    y = data[label_name].copy()
+
+    f = pd.Series(data=np.zeros_like(y), index=y.index)
+    for m in range(num_trees):
+        grad = f - y
+
+        data[label_name] = grad
+
+        tree = cart(data, max_depth, min_node_size, label_name)
+
+        y_tree_pred = data.apply(lambda x: tree.evaluate(x), axis=1)
+        weight = sum(-grad * y_tree_pred) / sum(y_tree_pred ** 2)
+
+        tree_ensemble.add_tree(tree, weight)
+
+        f -= weight*y_tree_pred
+
+    return tree_ensemble
