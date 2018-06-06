@@ -56,9 +56,6 @@ class TrainDataSet:
 
         encode_categorical_columns(self.data, self.categorical_columns_coding_map)
         fillna_numerical_columns(self.data, self.numerical_columns_means)
-
-        self.x = self.data.drop(self.label_name).copy()
-        self.y = self.data[self.label_name].copy()
         
     def get_categorical_columns_coding_map(self):
         categorical_columns = self.data.loc[:, self.data.dtypes == object].columns
@@ -81,9 +78,6 @@ class TestDataSet:
 
         encode_categorical_columns(self.data, self.train_dataset.categorical_columns_coding_map)
         fillna_numerical_columns(self.data, self.train_dataset.numerical_columns_means)
-
-        self.x = self.data.drop(self.train_dataset.label_name).copy()
-        self.y = self.data[self.train_dataset.label_name].copy()
 
 
 # train_dataset, test_dataset = parse_data('data/train.csv')
