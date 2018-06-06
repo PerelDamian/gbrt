@@ -2,14 +2,6 @@ import pandas as pd
 import numpy as np
 
 
-def read_data(path):
-    data = pd.read_csv(path, index_col=0)
-    data = data[~data.SalePrice.isnull()]
-    if 'MSSubClass' in data.columns:
-        data['MSSubClass'] = data.MSSubClass.astype(object)  # object column with numerical values
-    return data
-
-
 def split_data(data, train_percent=0.8):
     train_size = int(len(data) * train_percent)
     train_indices = np.random.choice(data.index, train_size, replace=False)
@@ -20,8 +12,22 @@ def split_data(data, train_percent=0.8):
     return train, test
 
 
-def encode_categorical_columns(dataset, encoding_map):
-    categorical_columns = dataset.data.loc[:, dataset.data.dtypes == object].columns
+def parse_data(path):
+    df = pd.read_csv(path, index_col=0)
+    df = df[~df.SalePrice.isnull()]
+    if 'MSSubClass' in df.columns:
+        df['MSSubClass'] = df.MSSubClass.astype(object)  # object column with numerical values
+
+    df_train, df_test = split_data(df)
+
+    train_dataset = TrainDataSet(df_train)
+    test_dataset = TestDataSet(df_test, train_dataset)
+
+    return train_dataset, test_dataset
+
+
+def encode_categorical_columns(data, encoding_map):
+    categorical_columns = data.loc[:, data.dtypes == object].columns
 
     for col_name in categorical_columns:
         col_encoding_map = encoding_map[col_name]
@@ -30,14 +36,14 @@ def encode_categorical_columns(dataset, encoding_map):
         except KeyError:
             col_null_encoding = col_encoding_map.max()
 
-        encoded_col = df.Alley.map(col_encoding_map)
+        encoded_col = data[col_name].map(col_encoding_map)
         encoded_col.fillna(col_null_encoding, inplace=True)
 
-        dataset.data[col_name] = encoded_col
+        data[col_name] = encoded_col
 
 
-def fillna_numerical_columns(dataset, imputation_values):
-    dataset.data.fillna(imputation_values, inplace=True)
+def fillna_numerical_columns(data, imputation_values):
+    data.fillna(imputation_values, inplace=True)
 
 
 class TrainDataSet:
@@ -48,8 +54,8 @@ class TrainDataSet:
         self.categorical_columns_coding_map = self.get_categorical_columns_coding_map()
         self.numerical_columns_means = self.get_numerical_columns_means()
 
-        encode_categorical_columns(self, self.categorical_columns_coding_map)
-        fillna_numerical_columns(self, self.numerical_columns_means)
+        encode_categorical_columns(self.data, self.categorical_columns_coding_map)
+        fillna_numerical_columns(self.data, self.numerical_columns_means)
 
     def get_categorical_columns_coding_map(self):
         categorical_columns = self.data.loc[:, self.data.dtypes == object].columns
@@ -70,19 +76,9 @@ class TestDataSet:
         self.data = data
         self.train_dataset = train_dataset
 
-        encode_categorical_columns(self, self.train_dataset.categorical_columns_coding_map)
-        fillna_numerical_columns(self, self.train_dataset.numerical_columns_means)
+        encode_categorical_columns(self.data, self.train_dataset.categorical_columns_coding_map)
+        fillna_numerical_columns(self.data, self.train_dataset.numerical_columns_means)
 
 
 
-
-
-
-df = read_data('data/train.csv')
-df_train, df_test = split_data(df)
-
-train_dataset = TrainDataSet(df_train)
-test_dataset = TestDataSet(df_test, train_dataset)
-
-print(test_dataset.data.head(5))
-print(sum(test_dataset.data.isnull().sum()))
+# train_dataset, test_dataset = parse_data('data/train.csv')
