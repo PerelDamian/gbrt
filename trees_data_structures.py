@@ -38,7 +38,7 @@ class RegressionTreeNode:
 
 class RegressionTree:
     def __init__(self):
-        self.root = None
+        self.root = RegressionTreeNode()
 
     def get_root(self):
         return self.root
