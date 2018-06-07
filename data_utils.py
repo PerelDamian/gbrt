@@ -79,5 +79,3 @@ class TestDataSet:
         encode_categorical_columns(self.data, self.train_dataset.categorical_columns_coding_map)
         fillna_numerical_columns(self.data, self.train_dataset.numerical_columns_means)
 
-
-# train_dataset, test_dataset = parse_data('data/train.csv')

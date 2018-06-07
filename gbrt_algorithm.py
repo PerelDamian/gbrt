@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def get_optimal_partiotion(data, label_name):
-    x = data.drop(label_name)
+    x = data.drop(label_name, axis=1)
     y = data[label_name]
 
     min_so_far = np.inf
@@ -25,7 +25,6 @@ def get_optimal_partiotion(data, label_name):
                 min_so_far = loss
                 best_col_name = col_name
                 best_split_value = uniqe_value
-
     return best_col_name, best_split_value
 
 
@@ -46,6 +45,9 @@ def cart(data, max_depth, min_node_size, label_name):
 
             # checks minimum node size violation
             if len(left_node_data) > min_node_size and len(right_node_data) > min_node_size:
+                # define split parameters
+                node_reference.split(col_name, split_value)
+
                 # initialize descendents
                 left_node_reference = RegressionTreeNode()
                 right_node_reference = RegressionTreeNode()
@@ -67,24 +69,36 @@ def cart(data, max_depth, min_node_size, label_name):
     return tree
 
 
-def gbrt(data, num_trees, max_depth, min_node_size, label_name):
+def gbrt(train_data, test_data, num_trees, max_depth, min_node_size, label_name):
     tree_ensemble = RegressionTreeEnsemble()
 
-    y = data[label_name].copy()
+    y_train = train_data[label_name].copy()
+    y_test = test_data[label_name]
 
-    f = pd.Series(data=np.zeros_like(y), index=y.index)
+    f = pd.Series(data=np.zeros_like(y_train), index=y_train.index)
     for m in range(num_trees):
-        grad = f - y
+        grad = f - y_train
 
-        data[label_name] = grad
+        train_data[label_name] = grad
 
-        tree = cart(data, max_depth, min_node_size, label_name)
+        tree = cart(train_data, max_depth, min_node_size, label_name)
 
-        y_tree_pred = data.apply(lambda x: tree.evaluate(x), axis=1)
+        y_tree_pred = train_data.apply(lambda xi: tree.evaluate(xi[:]), axis=1)
         weight = sum(-grad * y_tree_pred) / sum(y_tree_pred ** 2)
 
         tree_ensemble.add_tree(tree, weight)
 
         f -= weight*y_tree_pred
+
+        # evaluate train and test sets
+        y_train_ensemble_pred = train_data.apply(lambda xi: tree_ensemble.evaluate(xi[:], m+1), axis=1)
+        y_test_ensemble_pred = test_data.apply(lambda xi: tree_ensemble.evaluate(xi[:], m+1), axis=1)
+
+        train_mean_loss = np.mean((y_train - y_train_ensemble_pred) ** 2)
+        test_mean_loss = np.mean((y_test - y_test_ensemble_pred) ** 2)
+
+        print('Add tree number {}'.format(m+1))
+        print('Train mean loss is: {}'.format(train_mean_loss))
+        print('Test mean loss is: {}'.format(test_mean_loss))
 
     return tree_ensemble

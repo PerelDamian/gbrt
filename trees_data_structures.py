@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class RegressionTreeNode:
     def __init__(self):
         self.j = None
@@ -31,9 +34,9 @@ class RegressionTreeNode:
         if self.is_terminal():
             return self.const
         elif x[self.j] <= self.s:
-            return self.left_descendent.predict(x)
+            return self.left_descendent.evaluate(x)
         else:
-            return self.right_descendent.predict(x)
+            return self.right_descendent.evaluate(x)
 
 
 class RegressionTree:
@@ -68,4 +71,5 @@ class RegressionTreeEnsemble:
         evals = [tree.evaluate(x)*weight for tree, weight in zip(self.trees[:m], self.weights[:m])]
         
         return self.c + sum(evals)
+
 
