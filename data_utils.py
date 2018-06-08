@@ -16,12 +16,13 @@ def parse_data(path):
     df = pd.read_csv(path, index_col=0)
     df = df[~df.SalePrice.isnull()]
     if 'MSSubClass' in df.columns:
-        df['MSSubClass'] = df.MSSubClass.astype(object)  # object column with numerical values
+        df['MSSubClass'] = df.MSSubClass.astype(object)  # categorical feature with numerical values
 
     df_train, df_test = split_data(df)
 
     train_dataset = TrainDataSet(df_train)
-    test_dataset = TestDataSet(df_test, train_dataset)
+    test_dataset = TestDataSet(df_test, train_dataset.categorical_columns_coding_map,
+                               train_dataset.numerical_columns_means)
 
     return train_dataset, test_dataset
 
@@ -72,10 +73,9 @@ class TrainDataSet:
 
 
 class TestDataSet:
-    def __init__(self, data, train_dataset):
+    def __init__(self, data, categorical_columns_coding_map, numerical_columns_means):
         self.data = data
-        self.train_dataset = train_dataset
 
-        encode_categorical_columns(self.data, self.train_dataset.categorical_columns_coding_map)
-        fillna_numerical_columns(self.data, self.train_dataset.numerical_columns_means)
+        encode_categorical_columns(self.data, categorical_columns_coding_map)
+        fillna_numerical_columns(self.data, numerical_columns_means)
 

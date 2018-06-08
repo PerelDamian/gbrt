@@ -1,12 +1,9 @@
-import numpy as np
-
-
 class RegressionTreeNode:
     def __init__(self):
         self.j = None
         self.s = None
-        self.left_descendent = None
-        self.right_descendent = None
+        self.left_descendant = None
+        self.right_descendant = None
         self.const = None
 
     def make_terminal(self, const):
@@ -15,17 +12,19 @@ class RegressionTreeNode:
     def split(self, j, s):
         self.j = j
         self.s = s
+        self.left_descendant = RegressionTreeNode()
+        self.right_descendant = RegressionTreeNode()
 
     def print_sub_tree(self, depth=0):
-        identation = '\t' * depth
+        indentation = '\t' * depth
 
         if self.is_terminal():
-            print('{}return {}'.format(identation, self.const))
+            print('{}return {}'.format(indentation, self.const))
         else:
-            print("{}if x['{}'] <= {} then:".format(identation, self.j, self.s))
-            self.left_descendent.print_sub_tree(depth=depth+1)
-            print("if x['{}'] > {} then:".format(self.j, self.s))
-            self.right_descendent.print_sub_tree(depth=depth+1)
+            print("{}if x['{}'] <= {} then:".format(indentation, self.j, self.s))
+            self.left_descendant.print_sub_tree(depth=depth+1)
+            print("{}if x['{}'] > {} then:".format(indentation, self.j, self.s))
+            self.right_descendant.print_sub_tree(depth=depth+1)
 
     def is_terminal(self):
         return self.const is not None
@@ -34,9 +33,12 @@ class RegressionTreeNode:
         if self.is_terminal():
             return self.const
         elif x[self.j] <= self.s:
-            return self.left_descendent.evaluate(x)
+            return self.left_descendant.evaluate(x)
         else:
-            return self.right_descendent.evaluate(x)
+            return self.right_descendant.evaluate(x)
+
+    def set_const(self, label_col):
+        self.const = label_col.mean()
 
 
 class RegressionTree:
@@ -62,12 +64,10 @@ class RegressionTreeEnsemble:
         self.weights.append(weight)
         self.M += 1
 
-    def set_initial_constant(self, c):
+    def set_initial_constant(self, c=0):
         self.c = c
 
     def evaluate(self, x, m):
-        m = min(m, self.M)
-
         evals = [tree.evaluate(x)*weight for tree, weight in zip(self.trees[:m], self.weights[:m])]
         
         return self.c + sum(evals)
