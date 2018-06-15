@@ -22,9 +22,9 @@ class RegressionTreeNode:
             print('{}return {}'.format(indentation, self.const))
         else:
             print("{}if x['{}'] <= {} then:".format(indentation, self.j, self.s))
-            self.left_descendant.print_sub_tree(depth=depth+1)
+            self.left_descendant.print_sub_tree(depth=depth + 1)
             print("{}if x['{}'] > {} then:".format(indentation, self.j, self.s))
-            self.right_descendant.print_sub_tree(depth=depth+1)
+            self.right_descendant.print_sub_tree(depth=depth + 1)
 
     def is_terminal(self):
         return self.const is not None
@@ -68,8 +68,8 @@ class RegressionTreeEnsemble:
         self.c = c
 
     def evaluate(self, x, m):
-        evals = [tree.evaluate(x)*weight for tree, weight in zip(self.trees[:m], self.weights[:m])]
-        
+        evals = [tree.evaluate(x) * weight for tree, weight in zip(self.trees[:m], self.weights[:m])]
+
         return self.c + sum(evals)
 
 

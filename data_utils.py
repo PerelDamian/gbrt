@@ -57,7 +57,7 @@ class TrainDataSet:
 
         encode_categorical_columns(self.data, self.categorical_columns_coding_map)
         fillna_numerical_columns(self.data, self.numerical_columns_means)
-        
+
     def get_categorical_columns_coding_map(self):
         categorical_columns = self.data.loc[:, self.data.dtypes == object].columns
 

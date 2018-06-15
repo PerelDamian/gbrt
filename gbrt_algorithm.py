@@ -1,6 +1,7 @@
 from trees_data_structures import *
 import numpy as np
 import pandas as pd
+import random
 
 
 def get_optimal_partition(data, label_name):
@@ -55,25 +56,26 @@ def cart(data, max_depth, min_node_size, label_name):
     return tree
 
 
-def gbrt(train_data, test_data, num_trees, max_depth, min_node_size, label_name):
+def gbrt(train_data, test_data, label_name, params):
     tree_ensemble = RegressionTreeEnsemble()
 
     y_train = train_data[label_name].copy()
     y_test = test_data[label_name]
 
     f = pd.Series(data=np.zeros_like(y_train), index=y_train.index)
-    for m in range(num_trees):
+    for m in range(params.num_trees):
         grad = y_train - f
         train_data[label_name] = grad
-        tree = cart(train_data, max_depth, min_node_size, label_name)
+        sub_data = train_data.sample(frac=params.sub_samp)
+        sub_idx = sub_data.index
+        tree = cart(sub_data, params.max_depth, params.min_node_size, label_name)
 
         tree.root.print_sub_tree()
 
         y_tree_pred = train_data.apply(lambda xi: tree.evaluate(xi[:]), axis=1)
         weight = sum(grad * y_tree_pred) / sum(y_tree_pred ** 2)
         tree_ensemble.add_tree(tree, weight)
-
-        f += weight*y_tree_pred
+        f += params.weight_decay * weight * y_tree_pred
 
         # evaluate train and test sets
         y_train_ensemble_pred = train_data.apply(lambda xi: tree_ensemble.evaluate(xi[:], m+1), axis=1)
@@ -89,3 +91,7 @@ def gbrt(train_data, test_data, num_trees, max_depth, min_node_size, label_name)
     train_data[label_name] = y_train
 
     return tree_ensemble
+
+
+
+
