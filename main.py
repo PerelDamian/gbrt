@@ -13,7 +13,7 @@ class hparams(object):
 
 
 train_dataset, test_dataset = parse_data('data/train.csv')
-params = hparams(num_trees=5, max_depth=3, min_node_size=0, weight_decay=0.9, sub_samp=0.3)
+params = hparams(num_trees=10, max_depth=3, min_node_size=0, weight_decay=0.9, sub_samp=1)
 model = gbrt(train_data=train_dataset.data, test_data=test_dataset.data, label_name=train_dataset.label_name, params=params)
 
 features_dict = ensemble_feature_importance(test_dataset, train_dataset.label_name, model)

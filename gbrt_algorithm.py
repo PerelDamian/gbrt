@@ -67,10 +67,9 @@ def gbrt(train_data, test_data, label_name, params):
         grad = y_train - f
         train_data[label_name] = grad
         sub_data = train_data.sample(frac=params.sub_samp)
-        sub_idx = sub_data.index
         tree = cart(sub_data, params.max_depth, params.min_node_size, label_name)
 
-        tree.root.print_sub_tree()
+        # tree.root.print_sub_tree()
 
         y_tree_pred = train_data.apply(lambda xi: tree.evaluate(xi[:]), axis=1)
         weight = sum(grad * y_tree_pred) / sum(y_tree_pred ** 2)
